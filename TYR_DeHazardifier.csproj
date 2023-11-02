@@ -6,8 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Tyr-DeHazardifier\**" />
     <Compile Remove="Tyrian-DeHazardifier\**" />
+    <EmbeddedResource Remove="Tyr-DeHazardifier\**" />
     <EmbeddedResource Remove="Tyrian-DeHazardifier\**" />
+    <None Remove="Tyr-DeHazardifier\**" />
     <None Remove="Tyrian-DeHazardifier\**" />
   </ItemGroup>
 

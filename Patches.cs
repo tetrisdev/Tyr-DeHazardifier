@@ -244,4 +244,17 @@ namespace HazardPatches
             return false;
         }
     }
+    public class FlameDamageTriggerPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(FlameDamageTrigger), "ProceedDamage");
+        }
+
+        [PatchPrefix]
+        public static bool PatchPrefix()
+        {
+            return false;
+        }
+    }
 }

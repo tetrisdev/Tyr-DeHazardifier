@@ -5,13 +5,14 @@ using EFT;
 using EFT.Interactive;
 using HazardPatches;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace TYR_DeHazardifier
 {
-    [BepInPlugin("com.TYR.DeHazardifier", "TYR_DeHazardifier", "1.0.0")]
+    [BepInPlugin("com.TYR.DeHazardifier", "TYR_DeHazardifier", "1.0.2")]
     public class DeClutter : BaseUnityPlugin
     {
         private static GameWorld gameWorld;
@@ -25,8 +26,8 @@ namespace TYR_DeHazardifier
         public static ConfigEntry<bool> barbedWireEnabledConfig;
         public static ConfigEntry<bool> barbedWireVisualsEnabledConfig;
         public static ConfigEntry<bool> sniperBorderZonesEnabledConfig;
+        public static ConfigEntry<bool> fireDamageEnabledConfig;
         public static bool deHazardifiered = false;
-
         private void Awake()
         {
             deHazardifierEnabledConfig = Config.Bind("A - De-Hazardifier Enabler", "A - De-Hazardifier Enabled", true, "Enables the De-Hazardifier.");
@@ -36,6 +37,7 @@ namespace TYR_DeHazardifier
             barbedWireEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "D - Barbed Wire Disabler", true, "Disables barbed wire.");
             barbedWireVisualsEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "E - Barbed Wire Visuals Disabler", true, "Disables visual model of barbed wire.");
             sniperBorderZonesEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "F - Sniper Border Zones Disabler", true, "Disables sniper border zones.");
+            fireDamageEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "G - Fire Damage Disabler", true, "Disables damage taken from standing in fire.");
             deHazardifierEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
             minefieldsEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
             directionalMinesEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
@@ -43,6 +45,7 @@ namespace TYR_DeHazardifier
             barbedWireEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
             barbedWireVisualsEnabledConfig.SettingChanged += OnApplyBarbedWireVisualsSettingChanged;
             sniperBorderZonesEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
+            fireDamageEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             PatchSetter();
         }
@@ -107,10 +110,12 @@ namespace TYR_DeHazardifier
             if (gameWorld == null || gameWorld.MainPlayer == null)
                 return;
 
-            DeHazardifyVisuals();
+            StaticManager.BeginCoroutine(DeHazardifyVisuals());
+            DirectionalMinesVisualsScene();
+            BarbedWireVisualsScene();
             deHazardifiered = true;
         }
-        private void DeHazardifyVisuals()
+        private IEnumerator DeHazardifyVisuals()
         {
             List<GameObject> allGameObjects = new List<GameObject>();
             GameObject[] rootObjects = FindObjectsOfType<GameObject>();
@@ -120,7 +125,7 @@ namespace TYR_DeHazardifier
                 bool isMine = root.GetComponent<MineDirectional>() != null;
                 string isMineGrouped = root.name.ToLower();
                 bool isBarbedWire = root.GetComponent<BarbedWire>() != null;
-                if (directionalMinesVisualsEnabledConfig.Value && (isMine || isMineGrouped == "Mines"))
+                if (directionalMinesVisualsEnabledConfig.Value && (isMine || isMineGrouped == "mines"))
                 {
                     allGameObjects.Add(root);
                     savedDirectionalMinesObjects.Add(root);
@@ -131,8 +136,7 @@ namespace TYR_DeHazardifier
                     savedBarbedWireObjects.Add(root);
                 }
             }
-            DirectionalMinesVisualsScene();
-            BarbedWireVisualsScene();
+            yield break;
         }
         public static void PatchSetter()
         {
@@ -195,6 +199,14 @@ namespace TYR_DeHazardifier
                 new SniperFiringZoneCoroutinePatch().Disable();
                 new SniperFiringZoneTargetPatch().Disable();
                 new SniperFiringZoneTarget2Patch().Disable();
+            }
+            if (fireDamageEnabledConfig.Value)
+            {
+                new FlameDamageTriggerPatch().Enable();
+            }
+            else
+            {
+                new FlameDamageTriggerPatch().Disable();
             }
         }
     }
