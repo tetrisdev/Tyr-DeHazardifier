@@ -7,103 +7,162 @@ using HazardPatches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using SPT.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace TYR_DeHazardifier
+namespace Tetris.DeHazardifier
 {
-    [BepInPlugin("com.TYR.DeHazardifier", "TYR_DeHazardifier", "1.0.2")]
-    public class DeClutter : BaseUnityPlugin
+    [BepInPlugin("com.Tetris.DeHazardifier", "Tetris.DeHazardifier", "1.0.0")]
+
+    public class DeHazardifier : BaseUnityPlugin
     {
+        private ConfigEntry<bool> _deHazardifierMasterConfig;
+        private ConfigEntry<bool> _minefieldsConfig;
+        private ConfigEntry<bool> _directionalMinesConfig;
+        private ConfigEntry<bool> _directionalMinesVisualsConfig;
+        private ConfigEntry<bool> _barbedWireConfig;
+        private ConfigEntry<bool> _barbedWireVisualsConfig;
+        private ConfigEntry<bool> _sniperBorderZoneConfig;
+        private ConfigEntry<bool> _fireDamageConfig;
+        
         private static GameWorld gameWorld;
         public static bool MapLoaded() => Singleton<GameWorld>.Instantiated;
         public static List<GameObject> savedDirectionalMinesObjects = new List<GameObject>();
         public static List<GameObject> savedBarbedWireObjects = new List<GameObject>();
-        public static ConfigEntry<bool> deHazardifierEnabledConfig;
-        public static ConfigEntry<bool> minefieldsEnabledConfig;
-        public static ConfigEntry<bool> directionalMinesEnabledConfig;
-        public static ConfigEntry<bool> directionalMinesVisualsEnabledConfig;
-        public static ConfigEntry<bool> barbedWireEnabledConfig;
-        public static ConfigEntry<bool> barbedWireVisualsEnabledConfig;
-        public static ConfigEntry<bool> sniperBorderZonesEnabledConfig;
-        public static ConfigEntry<bool> fireDamageEnabledConfig;
         public static bool deHazardifiered = false;
+
+        private readonly ModulePatch[] _minefieldPatches =
+        {
+            new MinefieldCoroutinePatch(),
+            new MinefieldCoroutinePatch(),
+            new MinefieldDamagePatch(),
+            new MinefieldViewTriggerPatch()
+        };
+        
+        private readonly ModulePatch[] _directionalMinesPatches =
+        {
+            new MineDirectionalAwakePatch(),
+            new MineDirectionalTriggerPatch(),
+            new MineDirectionalTriggerColliderPatch(),
+            new MineDirectionalDamagePatch()
+        };
+
+        private readonly ModulePatch[] _barbedWirePatches =
+        {
+            new BarbedWireDamagePatch(),
+            new BarbedWireSpeedPenaltyPatch(),
+            new BarbedWireSpeedPenalty2Patch()
+        };
+
+        private readonly ModulePatch[] _sniperBorderZonePatches =
+        {
+            new SniperImitatorAwakePatch(),
+            new SniperImitatorDamagePatch(),
+            new SniperImitatorShootPatch(),
+            new SniperFiringZoneShootPatch(),
+            new SniperFiringZoneCoroutinePatch(),
+            new SniperFiringZoneTargetPatch(),
+            new SniperFiringZoneTarget2Patch()
+        };
+
+        private readonly ModulePatch[] _fireDamagePatches =
+        {
+            new FlameDamageTriggerPatch()
+        };
+
+        private (ConfigEntry<bool> config, ModulePatch[] patches)[] _groups;
         private void Awake()
         {
-            deHazardifierEnabledConfig = Config.Bind("A - De-Hazardifier Enabler", "A - De-Hazardifier Enabled", true, "Enables the De-Hazardifier.");
-            minefieldsEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "A - Minefield Disabler", true, "Disables minefields.");
-            directionalMinesEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "B - Claymore Mines Disabler", true, "Disables claymore mines.");
-            directionalMinesVisualsEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "C - Claymore Mines Visuals Disabler", true, "Disables visual model of claymore mines.");
-            barbedWireEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "D - Barbed Wire Disabler", true, "Disables barbed wire.");
-            barbedWireVisualsEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "E - Barbed Wire Visuals Disabler", true, "Disables visual model of barbed wire.");
-            sniperBorderZonesEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "F - Sniper Border Zones Disabler", true, "Disables sniper border zones.");
-            fireDamageEnabledConfig = Config.Bind("A - De-Hazardifier Settings", "G - Fire Damage Disabler", true, "Disables damage taken from standing in fire.");
-            deHazardifierEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
-            minefieldsEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
-            directionalMinesEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
-            directionalMinesVisualsEnabledConfig.SettingChanged += OnApplyDirectionalMinesVisualsSettingChanged;
-            barbedWireEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
-            barbedWireVisualsEnabledConfig.SettingChanged += OnApplyBarbedWireVisualsSettingChanged;
-            sniperBorderZonesEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
-            fireDamageEnabledConfig.SettingChanged += OnApplyDeHazardifierSettingChanged;
+            _deHazardifierMasterConfig = Config.Bind("A - De-Hazardifier Enabler", "A - De-Hazardifier Enabled", true, "Enables the De-Hazardifier.");
+            _minefieldsConfig = Config.Bind("A - De-Hazardifier Settings", "A - Minefield Disabler", true, "Disables minefields.");
+            _directionalMinesConfig = Config.Bind("A - De-Hazardifier Settings", "B - Claymore Mines Disabler", true, "Disables claymore mines.");
+            _directionalMinesVisualsConfig = Config.Bind("A - De-Hazardifier Settings", "C - Claymore Mines Visuals Disabler", true, "Disables visual model of claymore mines.");
+            _barbedWireConfig = Config.Bind("A - De-Hazardifier Settings", "D - Barbed Wire Disabler", true, "Disables barbed wire.");
+            _barbedWireVisualsConfig = Config.Bind("A - De-Hazardifier Settings", "E - Barbed Wire Visuals Disabler", true, "Disables visual model of barbed wire.");
+            _sniperBorderZoneConfig = Config.Bind("A - De-Hazardifier Settings", "F - Sniper Border Zones Disabler", true, "Disables sniper border zones.");
+            _fireDamageConfig = Config.Bind("A - De-Hazardifier Settings", "G - Fire Damage Disabler", true, "Disables damage taken from standing in fire.");
+
+            _groups = new[]
+            {
+                (_minefieldsConfig, _minefieldPatches),
+                (_directionalMinesConfig, _directionalMinesPatches),
+                (_barbedWireConfig, _barbedWirePatches),
+                (_sniperBorderZoneConfig,_sniperBorderZonePatches),
+                (_fireDamageConfig, _fireDamagePatches)
+            };
+            
+            foreach (var (cfg,patches) in _groups)
+                cfg.SettingChanged += (sender, args) => ApplyGroup(cfg.Value, patches);
+
+            _deHazardifierMasterConfig.SettingChanged += (sender, args) => ApplyMasterConfig();
+            _directionalMinesVisualsConfig.SettingChanged += OnApplyDirectionalMinesVisualsSettingChanged;
+            _barbedWireVisualsConfig.SettingChanged += OnApplyBarbedWireVisualsSettingChanged;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
-            PatchSetter();
+            
+            ApplyMasterConfig();
         }
+
+        private void ApplyGroup(bool enable, ModulePatch[] patches)
+        {
+            foreach (var patch in patches)
+            {
+                patch.SetEnabled(enable);
+            }
+        }
+        
+        private void ApplyMasterConfig()
+        {
+            // if master is OFF, disable everything
+            if (!_deHazardifierMasterConfig.Value)
+            {
+                foreach (var (cfg,patches) in _groups)
+                    ApplyGroup(false, patches);
+                return;
+            }
+
+            // otherwise re‐apply each subgroup based on its own config
+            foreach (var (cfg,patches) in _groups)
+                ApplyGroup(cfg.Value, patches);
+            return;
+        }
+
         private void OnApplyDirectionalMinesVisualsSettingChanged(object sender, EventArgs e)
         {
             DirectionalMinesVisualsScene();
         }
+        
         private void OnApplyBarbedWireVisualsSettingChanged(object sender, EventArgs e)
         {
             BarbedWireVisualsScene();
         }
+        
         private void BarbedWireVisualsScene()
-        {;
-            foreach (GameObject obj in savedBarbedWireObjects)
+        {
+            foreach (GameObject barbedWireObject in savedBarbedWireObjects)
             {
-                if (obj != null)
-                {
-                    if (barbedWireVisualsEnabledConfig.Value)
-                    {
-                        obj.SetActive(false);
-                    }
-                    else
-                    {
-                        obj.SetActive(true);
-                    }
-                }
+                barbedWireObject?.SetActive(_barbedWireVisualsConfig.Value);
             }
         }
-        private void OnApplyDeHazardifierSettingChanged(object sender, EventArgs e)
-        {
-            PatchSetter();
-        }
+        
         private void DirectionalMinesVisualsScene()
         {
-            foreach (GameObject obj in savedDirectionalMinesObjects)
+            foreach (GameObject directionalMinesObject in savedDirectionalMinesObjects)
             {
-                if (obj != null)
-                {
-                    if (directionalMinesVisualsEnabledConfig.Value)
-                    {
-                        obj.SetActive(false);
-                    }
-                    else
-                    {
-                        obj.SetActive(true);
-                    }
-                }
+                directionalMinesObject?.SetActive(_directionalMinesVisualsConfig.Value);
             }
         }
+        
         private void OnSceneUnloaded(Scene scene)
         {
             savedDirectionalMinesObjects.Clear();
             savedBarbedWireObjects.Clear();
             deHazardifiered = false;
         }
+        
         private void Update()
         {
-            if (!MapLoaded() || deHazardifiered || !deHazardifierEnabledConfig.Value)
+            if (!MapLoaded() || deHazardifiered || !_deHazardifierMasterConfig.Value)
                 return;
 
             gameWorld = Singleton<GameWorld>.Instance;
@@ -115,6 +174,7 @@ namespace TYR_DeHazardifier
             BarbedWireVisualsScene();
             deHazardifiered = true;
         }
+        
         private IEnumerator DeHazardifyVisuals()
         {
             List<GameObject> allGameObjects = new List<GameObject>();
@@ -125,12 +185,12 @@ namespace TYR_DeHazardifier
                 bool isMine = root.GetComponent<MineDirectional>() != null;
                 string isMineGrouped = root.name.ToLower();
                 bool isBarbedWire = root.GetComponent<BarbedWire>() != null;
-                if (directionalMinesVisualsEnabledConfig.Value && (isMine || isMineGrouped == "mines"))
+                if (_directionalMinesVisualsConfig.Value && (isMine || isMineGrouped == "mines"))
                 {
                     allGameObjects.Add(root);
                     savedDirectionalMinesObjects.Add(root);
                 }
-                if (barbedWireVisualsEnabledConfig.Value && isBarbedWire)
+                if (_barbedWireVisualsConfig.Value && isBarbedWire)
                 {
                     allGameObjects.Add(root);
                     savedBarbedWireObjects.Add(root);
@@ -138,76 +198,16 @@ namespace TYR_DeHazardifier
             }
             yield break;
         }
-        public static void PatchSetter()
+    }
+
+    static class PatchExtensions
+    {
+        public static void SetEnabled(this ModulePatch patch, bool enabled)
         {
-            if (minefieldsEnabledConfig.Value)
-            {
-                new MinefieldTriggerPatch().Enable();
-                new MinefieldCoroutinePatch().Enable();
-                new MinefieldDamagePatch().Enable();
-                new MinefieldViewTriggerPatch().Enable();
-            }
+            if (enabled)
+                patch.Enable();
             else
-            {
-                new MinefieldTriggerPatch().Disable();
-                new MinefieldCoroutinePatch().Disable();
-                new MinefieldDamagePatch().Disable();
-                new MinefieldViewTriggerPatch().Disable();
-            }
-            if (directionalMinesEnabledConfig.Value)
-            {
-                new MineDirectionalAwakePatch().Enable();
-                new MineDirectionalTriggerPatch().Enable();
-                new MineDirectionalTriggerColliderPatch().Enable();
-                new MineDirectionalDamagePatch().Enable();
-            }
-            else
-            {
-                new MineDirectionalAwakePatch().Disable();
-                new MineDirectionalTriggerPatch().Disable();
-                new MineDirectionalTriggerColliderPatch().Disable();
-                new MineDirectionalDamagePatch().Disable();
-            }
-            if (barbedWireEnabledConfig.Value)
-            {
-                new BarbedWireDamagePatch().Enable();
-                new BarbedWireSpeedPenaltyPatch().Enable();
-                new BarbedWireSpeedPenalty2Patch().Enable();
-            }
-            else
-            {
-                new BarbedWireDamagePatch().Disable();
-                new BarbedWireSpeedPenaltyPatch().Disable();
-                new BarbedWireSpeedPenalty2Patch().Disable();
-            }
-            if (sniperBorderZonesEnabledConfig.Value)
-            {
-                new SniperImitatorAwakePatch().Enable();
-                new SniperImitatorDamagePatch().Enable();
-                new SniperImitatorShootPatch().Enable();
-                new SniperFiringZoneShootPatch().Enable();
-                new SniperFiringZoneCoroutinePatch().Enable();
-                new SniperFiringZoneTargetPatch().Enable();
-                new SniperFiringZoneTarget2Patch().Enable();
-            }
-            else
-            {
-                new SniperImitatorAwakePatch().Disable();
-                new SniperImitatorDamagePatch().Disable();
-                new SniperImitatorShootPatch().Disable();
-                new SniperFiringZoneShootPatch().Disable();
-                new SniperFiringZoneCoroutinePatch().Disable();
-                new SniperFiringZoneTargetPatch().Disable();
-                new SniperFiringZoneTarget2Patch().Disable();
-            }
-            if (fireDamageEnabledConfig.Value)
-            {
-                new FlameDamageTriggerPatch().Enable();
-            }
-            else
-            {
-                new FlameDamageTriggerPatch().Disable();
-            }
+                patch.Disable();
         }
     }
 }
