@@ -1,260 +1,163 @@
-﻿using Aki.Reflection.Patching;
+﻿using System;
+using SPT.Reflection.Patching;
 using EFT.Interactive;
 using HarmonyLib;
 using System.Reflection;
-using UnityEngine;
 
 namespace HazardPatches
 {
-    public class MinefieldTriggerPatch : ModulePatch
+    [AttributeUsage(AttributeTargets.Class)]
+    public class PatchTargetAttribute : Attribute
     {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(Minefield), "IsInTriggerZone");
-        }
+        public Type TargetType { get; }
+        public string MethodName { get; }
 
-        [PatchPrefix]
-        public static bool PatchPrefix()
+        public PatchTargetAttribute(Type targetType, string methodName)
         {
-            return false;
+            TargetType = targetType;
+            MethodName = methodName;
         }
     }
 
-    public class MinefieldCoroutinePatch : ModulePatch
+    public abstract class DisableDamagePatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(Minefield), "FireCoroutine");
-        }
-
-        [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
+            var attr = GetType().GetCustomAttribute<PatchTargetAttribute>();
+            return AccessTools.Method(attr.TargetType, attr.MethodName);
         }
     }
 
-    public class MinefieldDamagePatch : ModulePatch
+    [PatchTarget(typeof(Minefield), nameof(Minefield.IsInTriggerZone))]
+    public class MinefieldTriggerPatch : DisableDamagePatch
     {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(Minefield), "method_3");
-        }
-
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
 
-    public class MinefieldViewTriggerPatch : ModulePatch
+    [PatchTarget(typeof(Minefield), nameof(Minefield.FireCoroutine))]
+    public class MinefieldCoroutinePatch : DisableDamagePatch
     {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(MinefieldView), "method_0");
-        }
-
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
-    }
-    public class MineDirectionalAwakePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(MineDirectional), "Awake");
-        }
-
-        [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
-    }
-    public class MineDirectionalTriggerPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(MineDirectional), "OnTriggerEnter");
-        }
-
-        [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
-    }
-    public class MineDirectionalTriggerColliderPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(MineDirectional), "method_1");
-        }
-
-        [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
 
-    public class MineDirectionalDamagePatch : ModulePatch
+    [PatchTarget(typeof(Minefield), nameof(Minefield.method_3))]
+    public class MinefieldDamagePatch : DisableDamagePatch
     {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(MineDirectional), "method_3");
-        }
-
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class BarbedWireDamagePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(BarbedWire), "ProceedDamage");
-        }
 
+    [PatchTarget(typeof(MinefieldView), nameof(MinefieldView.method_0))]
+    public class MinefieldViewTriggerPatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class BarbedWireSpeedPenaltyPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(BarbedWire), "AddPenalty");
-        }
 
+    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.Awake))]
+    public class MineDirectionalAwakePatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class BarbedWireSpeedPenalty2Patch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(BarbedWire), "RemovePenalty");
-        }
 
+    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.OnTriggerEnter))]
+    public class MineDirectionalTriggerPatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class SniperImitatorAwakePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(SniperImitator), "Awake");
-        }
 
+    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.method_1))]
+    public class MineDirectionalTriggerColliderPatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class SniperImitatorDamagePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(SniperImitator), "method_1");
-        }
 
+    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.method_3))]
+    public class MineDirectionalDamagePatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class SniperImitatorShootPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(SniperImitator), "method_0");
-        }
 
+    [PatchTarget(typeof(BarbedWire), nameof(BarbedWire.ProceedDamage))]
+    public class BarbedWireDamagePatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class SniperFiringZoneShootPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(SniperFiringZone), "Shoot");
-        }
 
+    [PatchTarget(typeof(BarbedWire), nameof(BarbedWire.AddPenalty))]
+    public class BarbedWireSpeedPenaltyPatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class SniperFiringZoneCoroutinePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(SniperFiringZone), "FireCoroutine");
-        }
 
+    [PatchTarget(typeof(BarbedWire), nameof(BarbedWire.RemovePenalty))]
+    public class BarbedWireSpeedPenalty2Patch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class SniperFiringZoneTargetPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(SniperFiringZone), "method_3");
-        }
 
+    [PatchTarget(typeof(SniperImitator), nameof(SniperImitator.Awake))]
+    public class SniperImitatorAwakePatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class SniperFiringZoneTarget2Patch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(SniperFiringZone), "method_4");
-        }
 
+    [PatchTarget(typeof(SniperImitator), nameof(SniperImitator.method_1))]
+    public class SniperImitatorDamagePatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
     }
-    public class FlameDamageTriggerPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(FlameDamageTrigger), "ProceedDamage");
-        }
 
+    [PatchTarget(typeof(SniperImitator), nameof(SniperImitator.method_0))]
+    public class SniperImitatorShootPatch : DisableDamagePatch
+    {
         [PatchPrefix]
-        public static bool PatchPrefix()
-        {
-            return false;
-        }
+        public static bool Prefix() => false;
+    }
+
+    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.Shoot))]
+    public class SniperFiringZoneShootPatch : DisableDamagePatch
+    {
+        [PatchPrefix]
+        public static bool Prefix() => false;
+    }
+
+    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.FireCoroutine))]
+    public class SniperFiringZoneCoroutinePatch : DisableDamagePatch
+    {
+        [PatchPrefix]
+        public static bool Prefix() => false;
+    }
+
+    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.method_3))]
+    public class SniperFiringZoneTargetPatch : DisableDamagePatch
+    {
+        [PatchPrefix]
+        public static bool Prefix() => false;
+    }
+
+    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.method_4))]
+    public class SniperFiringZoneTarget2Patch : DisableDamagePatch
+    {
+        [PatchPrefix]
+        public static bool Prefix() => false;
+    }
+
+    [PatchTarget(typeof(FlameDamageTrigger), nameof(FlameDamageTrigger.ProceedDamage))]
+    public class FlameDamageTriggerPatch : DisableDamagePatch
+    {
+        [PatchPrefix]
+        public static bool Prefix() => false;
     }
 }
