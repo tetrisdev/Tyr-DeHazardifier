@@ -26,7 +26,7 @@ namespace Tetris.DeHazardifier
         private ConfigEntry<bool> _sniperBorderZoneConfig;
         private ConfigEntry<bool> _fireDamageConfig;
         
-        private static GameWorld gameWorld;
+        private static GameWorld _gameWorld;
         public static bool MapLoaded() => Singleton<GameWorld>.Instantiated;
         public static List<GameObject> savedDirectionalMinesObjects = new List<GameObject>();
         public static List<GameObject> savedBarbedWireObjects = new List<GameObject>();
@@ -106,9 +106,7 @@ namespace Tetris.DeHazardifier
         private void ApplyGroup(bool enable, ModulePatch[] patches)
         {
             foreach (var patch in patches)
-            {
                 patch.SetEnabled(enable);
-            }
         }
         
         private void ApplyMasterConfig()
@@ -124,7 +122,6 @@ namespace Tetris.DeHazardifier
             // otherwise re‐apply each subgroup based on its own config
             foreach (var (cfg,patches) in _groups)
                 ApplyGroup(cfg.Value, patches);
-            return;
         }
 
         private void OnApplyDirectionalMinesVisualsSettingChanged(object sender, EventArgs e)
@@ -165,8 +162,8 @@ namespace Tetris.DeHazardifier
             if (!MapLoaded() || deHazardifiered || !_deHazardifierMasterConfig.Value)
                 return;
 
-            gameWorld = Singleton<GameWorld>.Instance;
-            if (gameWorld == null || gameWorld.MainPlayer == null)
+            _gameWorld = Singleton<GameWorld>.Instance;
+            if (_gameWorld == null || _gameWorld.MainPlayer == null)
                 return;
 
             StaticManager.BeginCoroutine(DeHazardifyVisuals());
@@ -177,23 +174,32 @@ namespace Tetris.DeHazardifier
         
         private IEnumerator DeHazardifyVisuals()
         {
-            List<GameObject> allGameObjects = new List<GameObject>();
-            GameObject[] rootObjects = FindObjectsOfType<GameObject>();
+            if (!_directionalMinesVisualsConfig.Value && !_barbedWireVisualsConfig.Value)
+                yield break;
 
-            foreach (GameObject root in rootObjects)
+            if (_directionalMinesVisualsConfig.Value)
             {
-                bool isMine = root.GetComponent<MineDirectional>() != null;
-                string isMineGrouped = root.name.ToLower();
-                bool isBarbedWire = root.GetComponent<BarbedWire>() != null;
-                if (_directionalMinesVisualsConfig.Value && (isMine || isMineGrouped == "mines"))
+                foreach (var mine in FindObjectsOfType<MineDirectional>())
                 {
-                    allGameObjects.Add(root);
-                    savedDirectionalMinesObjects.Add(root);
+                    var go = mine.gameObject;
+                    if (go != null)
+                        savedDirectionalMinesObjects.Add(go);
                 }
-                if (_barbedWireVisualsConfig.Value && isBarbedWire)
+                
+                foreach (var mine in FindObjectsOfType<GameObject>())
                 {
-                    allGameObjects.Add(root);
-                    savedBarbedWireObjects.Add(root);
+                    if (mine != null && mine.name.Equals("mines", StringComparison.OrdinalIgnoreCase))
+                        savedDirectionalMinesObjects.Add(mine);
+                }
+            }
+            
+            if (_barbedWireVisualsConfig.Value)
+            {
+                foreach (var wire in FindObjectsOfType<BarbedWire>())
+                {
+                    var go = wire.gameObject;
+                    if (go != null)
+                        savedBarbedWireObjects.Add(go);
                 }
             }
             yield break;
