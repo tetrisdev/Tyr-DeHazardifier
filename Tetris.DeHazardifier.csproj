@@ -5,7 +5,7 @@
     <AssemblyName>Tetris.DeHazardifier</AssemblyName>
     <RootNamespace>Tetris.DeHazardifier</RootNamespace>
     <Authors>Tetris, CJ, Tyrian</Authors>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Description>Updated De-Hazardifier, Original by Tyrian</Description>
   </PropertyGroup>
 
