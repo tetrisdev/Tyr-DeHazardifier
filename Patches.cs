@@ -42,14 +42,14 @@ namespace HazardPatches
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(Minefield), nameof(Minefield.method_3))]
+    [PatchTarget(typeof(Minefield), nameof(Minefield.DealExplosionDamage))]
     public class MinefieldDamagePatch : DisableDamagePatch
     {
         [PatchPrefix]
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(MinefieldView), nameof(MinefieldView.method_0))]
+    [PatchTarget(typeof(MinefieldView), nameof(MinefieldView.Explode))]
     public class MinefieldViewTriggerPatch : DisableDamagePatch
     {
         [PatchPrefix]
@@ -70,14 +70,14 @@ namespace HazardPatches
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.method_1))]
+    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.OnTriggerExit))]
     public class MineDirectionalTriggerColliderPatch : DisableDamagePatch
     {
         [PatchPrefix]
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.method_3))]
+    [PatchTarget(typeof(MineDirectional), nameof(MineDirectional.GetDamageInfo))]
     public class MineDirectionalDamagePatch : DisableDamagePatch
     {
         [PatchPrefix]
@@ -112,7 +112,7 @@ namespace HazardPatches
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(SniperImitator), nameof(SniperImitator.method_1))]
+    [PatchTarget(typeof(SniperImitator), nameof(SniperImitator.OnPlayerShotEvent))]
     public class SniperImitatorDamagePatch : DisableDamagePatch
     {
         [PatchPrefix]
@@ -140,14 +140,14 @@ namespace HazardPatches
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.method_3))]
+    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.IsSniperImmuneBot))]
     public class SniperFiringZoneTargetPatch : DisableDamagePatch
     {
         [PatchPrefix]
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.method_4))]
+    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.IsInBTR))]
     public class SniperFiringZoneTarget2Patch : DisableDamagePatch
     {
         [PatchPrefix]
