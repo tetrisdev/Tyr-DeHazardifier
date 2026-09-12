@@ -3,6 +3,7 @@ using SPT.Reflection.Patching;
 using EFT.Interactive;
 using HarmonyLib;
 using System.Reflection;
+using CommonAssets.Scripts.Game.LabyrinthEvent;
 
 namespace HazardPatches
 {
@@ -49,7 +50,7 @@ namespace HazardPatches
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(MinefieldView), nameof(MinefieldView.Explode))]
+    [PatchTarget(typeof(MinefieldView), nameof(MinefieldView.MinefieldOnPlayerShotEvent))]
     public class MinefieldViewTriggerPatch : DisableDamagePatch
     {
         [PatchPrefix]
@@ -119,7 +120,7 @@ namespace HazardPatches
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(SniperImitator), nameof(SniperImitator.method_0))]
+    [PatchTarget(typeof(SniperImitator), nameof(SniperImitator.method_1))]
     public class SniperImitatorShootPatch : DisableDamagePatch
     {
         [PatchPrefix]
@@ -147,17 +148,33 @@ namespace HazardPatches
         public static bool Prefix() => false;
     }
 
-    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.IsInBTR))]
-    public class SniperFiringZoneTarget2Patch : DisableDamagePatch
+    [PatchTarget(typeof(SniperFiringZone), nameof(SniperFiringZone.IsPlayerCanBeDamaged))]
+    public class SniperFiringZonePlayerImmunityPatch : DisableDamagePatch
     {
         [PatchPrefix]
         public static bool Prefix() => false;
     }
-
+    
     [PatchTarget(typeof(FlameDamageTrigger), nameof(FlameDamageTrigger.ProceedDamage))]
     public class FlameDamageTriggerPatch : DisableDamagePatch
     {
         [PatchPrefix]
         public static bool Prefix() => false;
+    }
+    
+    [PatchTarget(typeof(LabyrinthSyncableTraps), nameof(LabyrinthSyncableTraps.InitTraps))]
+    public class LabyrinthTrapsPatch : DisableDamagePatch
+    {
+        [PatchPrefix]
+        public static bool Prefix(TrapSyncable[] traps)
+        {
+            foreach (TrapSyncable trap in traps)
+            {
+                if (trap != null)
+                    trap.gameObject.SetActive(false);
+            }
+
+            return false;
+        }
     }
 }

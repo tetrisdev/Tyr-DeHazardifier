@@ -13,7 +13,7 @@ using UnityEngine.SceneManagement;
 
 namespace Tetris.DeHazardifier
 {
-    [BepInPlugin("com.Tetris.DeHazardifier", "Tetris.DeHazardifier", "1.0.0")]
+    [BepInPlugin("com.Tetris.DeHazardifier", "Tetris.DeHazardifier", "1.2.0")]
 
     public class DeHazardifier : BaseUnityPlugin
     {
@@ -25,6 +25,7 @@ namespace Tetris.DeHazardifier
         private ConfigEntry<bool> _barbedWireVisualsConfig;
         private ConfigEntry<bool> _sniperBorderZoneConfig;
         private ConfigEntry<bool> _fireDamageConfig;
+        private ConfigEntry<bool> _labyrinthTrapsConfig;
         
         private static GameWorld _gameWorld;
         public static bool MapLoaded() => Singleton<GameWorld>.Instantiated;
@@ -34,7 +35,7 @@ namespace Tetris.DeHazardifier
 
         private readonly ModulePatch[] _minefieldPatches =
         {
-            new MinefieldCoroutinePatch(),
+            new MinefieldTriggerPatch(),
             new MinefieldCoroutinePatch(),
             new MinefieldDamagePatch(),
             new MinefieldViewTriggerPatch()
@@ -63,12 +64,17 @@ namespace Tetris.DeHazardifier
             new SniperFiringZoneShootPatch(),
             new SniperFiringZoneCoroutinePatch(),
             new SniperFiringZoneTargetPatch(),
-            new SniperFiringZoneTarget2Patch()
+            new SniperFiringZonePlayerImmunityPatch()
         };
 
         private readonly ModulePatch[] _fireDamagePatches =
         {
             new FlameDamageTriggerPatch()
+        };
+        
+        private readonly ModulePatch[] _labyrinthTrapsPatches =
+        {
+            new LabyrinthTrapsPatch()
         };
 
         private (ConfigEntry<bool> config, ModulePatch[] patches)[] _groups;
@@ -82,6 +88,7 @@ namespace Tetris.DeHazardifier
             _barbedWireVisualsConfig = Config.Bind("A - De-Hazardifier Settings", "E - Barbed Wire Visuals Disabler", true, "Disables visual model of barbed wire.");
             _sniperBorderZoneConfig = Config.Bind("A - De-Hazardifier Settings", "F - Sniper Border Zones Disabler", true, "Disables sniper border zones.");
             _fireDamageConfig = Config.Bind("A - De-Hazardifier Settings", "G - Fire Damage Disabler", true, "Disables damage taken from standing in fire.");
+            _labyrinthTrapsConfig = Config.Bind("A - De-Hazardifier Settings", "H - Labyrinth Traps Disabler", true, "Disables labyrinth traps from being active.");
 
             _groups = new[]
             {
@@ -89,7 +96,8 @@ namespace Tetris.DeHazardifier
                 (_directionalMinesConfig, _directionalMinesPatches),
                 (_barbedWireConfig, _barbedWirePatches),
                 (_sniperBorderZoneConfig,_sniperBorderZonePatches),
-                (_fireDamageConfig, _fireDamagePatches)
+                (_fireDamageConfig, _fireDamagePatches),
+                (_labyrinthTrapsConfig,_labyrinthTrapsPatches)
             };
             
             foreach (var (cfg,patches) in _groups)

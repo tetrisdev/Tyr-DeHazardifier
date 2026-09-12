@@ -5,8 +5,28 @@
     <AssemblyName>Tetris.DeHazardifier</AssemblyName>
     <RootNamespace>Tetris.DeHazardifier</RootNamespace>
     <Authors>Tetris, CJ, Tyrian</Authors>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Description>Updated De-Hazardifier, Original by Tyrian</Description>
+    <SptPath Condition="'$(SptPath)' == ''">../spt-4-1-dev</SptPath>
+
+    <!-- Useful path aliases -->
+    <ManagedPath>$(SptPath)/EscapeFromTarkov_Data/Managed</ManagedPath>
+    <BepInExPath>$(SptPath)/BepInEx</BepInExPath>
+    <SptPluginPath>$(BepInExPath)/plugins/spt</SptPluginPath>
+
+    <!-- Keep normal compiler output separate -->
+    <OutputPath>$(MSBuildProjectDirectory)/bin/$(Configuration)/</OutputPath>
+
+    <!-- Final distributable output -->
+    <DistPath>$(MSBuildProjectDirectory)/dist</DistPath>
+    <PackagePath>$(DistPath)/package</PackagePath>
+    <ZipPath>$(DistPath)/$(AssemblyName)-$(Version).zip</ZipPath>
+
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+
+    <!-- Don't append net471 to our custom OutputPath -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -15,46 +35,46 @@
   
   <ItemGroup>
     <Reference Include="PhysicsModule">
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>..\Dev400\BepInEx\core\0Harmony.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\core\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="spt-common">
-      <HintPath>..\Dev400\BepInEx\plugins\spt\spt-common.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\plugins\spt\spt-common.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="spt-reflection">
-      <HintPath>..\Dev400\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>..\Dev400\BepInEx\core\BepInEx.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\core\BepInEx.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Comfort">
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Comfort.Unity, Version=1.0.0.4, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Sirenix.Serialization, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="System" />
@@ -67,62 +87,66 @@
     <Reference Include="System.Xml" />
     <Reference Include="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Dev400\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="Build">
-    <ItemGroup>
-      <MyDll Include="$(OutputPath)$(AssemblyName).dll" />
-    </ItemGroup>
+  <Target
+          Name="CreateReleasePackage"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release'">
 
-    <!-- Clean existing zip -->
-    <Delete Files="$(OutputPath)$(AssemblyName)-$(Version).zip" />
+    <RemoveDir Directories="$(PackagePath)" />
+    <MakeDir Directories="$(PackagePath)/BepInEx/plugins" />
+    <MakeDir Directories="$(DistPath)" />
 
-    <!-- Create folder structure -->
-    <MakeDir Directories="$(OutputPath)BepInEx\plugins" />
+    <Copy
+            SourceFiles="$(TargetPath)"
+            DestinationFolder="$(PackagePath)/BepInEx/plugins" />
 
-    <!-- Copy DLL into folder -->
-    <Copy SourceFiles="@(MyDll)" DestinationFolder="$(OutputPath)BepInEx\plugins\" />
+    <ZipDirectory
+            SourceDirectory="$(PackagePath)"
+            DestinationFile="$(ZipPath)"
+            Overwrite="true" />
 
-    <!-- Zip it -->
-    <Exec Command="powershell -Command &quot;Compress-Archive -Path '$(OutputPath)BepInEx\' -DestinationPath '$(OutputPath)$(AssemblyName)-$(Version).zip'&quot;" />
+    <RemoveDir Directories="$(PackagePath)" />
 
-    <!-- Clean up temporary folder -->
-    <RemoveDir Directories="$(OutputPath)BepInEx" />
+    <Message
+            Importance="high"
+            Text="Created release package: $(ZipPath)" />
   </Target>
 
 </Project>
